@@ -1,7 +1,8 @@
 import os
 from PIL import Image, ImageEnhance, ImageOps
 
-def overlay_images(image1_path, image2_path, output_folder=None, alpha=0.3):
+def overlay_images(image1_path, image2_path, output_folder=None, alpha=0.3,
+                  brightness=0.47, contrast=2.4, saturation=2.33, threshold=30):
     """
     叠加两张图片，在叠加前先进行反相处理
     
@@ -10,6 +11,10 @@ def overlay_images(image1_path, image2_path, output_folder=None, alpha=0.3):
     image2_path: 第二张图片路径（绿色通道）
     output_folder: 输出文件夹路径
     alpha: 透明度，默认0.3
+    brightness: 亮度增强系数，默认0.47
+    contrast: 对比度增强系数，默认2.4
+    saturation: 色彩饱和度增强系数，默认2.33
+    threshold: 背景过滤阈值，默认30
     """
     try:
         # 打开两张图片
@@ -45,22 +50,33 @@ def overlay_images(image1_path, image2_path, output_folder=None, alpha=0.3):
                 # 确保值不超过255
                 r = min(r, 255)
                 g = min(g, 255)
-                overlay_img.putpixel((x, y), (r, g, 0, 255))
+                
+                # 如果两个通道都低于阈值，则设置为透明
+                if r < threshold and g < threshold:
+                    overlay_img.putpixel((x, y), (0, 0, 0, 0))  # 完全透明
+                else:
+                    overlay_img.putpixel((x, y), (r, g, 0, 255))
         
         # 调整亮度和对比度
-        overlay_img = overlay_img.convert('RGB')
+        # 由于我们需要保持透明通道，先分离通道
+        r, g, b, a = overlay_img.split()
+        rgb_img = Image.merge('RGB', (r, g, b))
         
         # 亮度调整
-        brightness_enhancer = ImageEnhance.Brightness(overlay_img)
-        overlay_img = brightness_enhancer.enhance(2.0)
+        brightness_enhancer = ImageEnhance.Brightness(rgb_img)
+        rgb_img = brightness_enhancer.enhance(brightness)
         
         # 对比度调整
-        contrast_enhancer = ImageEnhance.Contrast(overlay_img)
-        overlay_img = contrast_enhancer.enhance(1.3)
+        contrast_enhancer = ImageEnhance.Contrast(rgb_img)
+        rgb_img = contrast_enhancer.enhance(contrast)
         
         # 色彩调整
-        color_enhancer = ImageEnhance.Color(overlay_img)
-        overlay_img = color_enhancer.enhance(1.4)
+        color_enhancer = ImageEnhance.Color(rgb_img)
+        rgb_img = color_enhancer.enhance(saturation)
+        
+        # 重新合并透明通道
+        r, g, b = rgb_img.split()
+        overlay_img = Image.merge('RGBA', (r, g, b, a))
         
         # 准备输出路径
         if output_folder is None:

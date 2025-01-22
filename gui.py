@@ -60,10 +60,46 @@ class ImageProcessorGUI:
         self.merge_preview = ttk.Label(self.merge_frame)
         self.merge_preview.grid(row=0, column=0, pady=5)
         
+        # 在合并结果预览框下方添加调节控件
+        self.adjust_frame = ttk.LabelFrame(self.main_frame, text="图像调节", padding="5")
+        self.adjust_frame.grid(row=2, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
+        
+        # 亮度调节
+        ttk.Label(self.adjust_frame, text="亮度:").grid(row=0, column=0, padx=5)
+        self.brightness_var = tk.DoubleVar(value=0.47)  # 修改默认值为0.47
+        self.brightness_scale = ttk.Scale(self.adjust_frame, from_=0.1, to=3.0, 
+                                        variable=self.brightness_var, orient=tk.HORIZONTAL)
+        self.brightness_scale.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
+        self.brightness_scale.bind("<ButtonRelease-1>", self.update_preview)
+        
+        # 对比度调节
+        ttk.Label(self.adjust_frame, text="对比度:").grid(row=0, column=2, padx=5)
+        self.contrast_var = tk.DoubleVar(value=2.4)  # 修改默认值为2.4
+        self.contrast_scale = ttk.Scale(self.adjust_frame, from_=0.1, to=3.0, 
+                                      variable=self.contrast_var, orient=tk.HORIZONTAL)
+        self.contrast_scale.grid(row=0, column=3, sticky=(tk.W, tk.E), padx=5)
+        self.contrast_scale.bind("<ButtonRelease-1>", self.update_preview)
+        
+        # 色彩饱和度调节
+        ttk.Label(self.adjust_frame, text="饱和度:").grid(row=0, column=4, padx=5)
+        self.color_var = tk.DoubleVar(value=2.33)  # 修改默认值为2.33
+        self.color_scale = ttk.Scale(self.adjust_frame, from_=0.1, to=3.0, 
+                                    variable=self.color_var, orient=tk.HORIZONTAL)
+        self.color_scale.grid(row=0, column=5, sticky=(tk.W, tk.E), padx=5)
+        self.color_scale.bind("<ButtonRelease-1>", self.update_preview)
+        
+        # 背景阈值调节
+        ttk.Label(self.adjust_frame, text="背景阈值:").grid(row=1, column=0, padx=5)
+        self.threshold_var = tk.IntVar(value=30)  # 默认阈值30
+        self.threshold_scale = ttk.Scale(self.adjust_frame, from_=0, to=255, 
+                                       variable=self.threshold_var, orient=tk.HORIZONTAL)
+        self.threshold_scale.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=5)
+        self.threshold_scale.bind("<ButtonRelease-1>", self.update_preview)
+        
         # 状态栏
         self.status_var = tk.StringVar()
         self.status_bar = ttk.Label(self.main_frame, textvariable=self.status_var, relief=tk.SUNKEN)
-        self.status_bar.grid(row=2, column=0, columnspan=3, sticky=(tk.W, tk.E))
+        self.status_bar.grid(row=3, column=0, columnspan=3, sticky=(tk.W, tk.E))
 
     def select_folder(self):
         """选择文件夹并自动处理"""
@@ -126,24 +162,37 @@ class ImageProcessorGUI:
             red_pseudo = None
             green_pseudo = None
             
+            # 获取当前的调节值
+            brightness = self.brightness_var.get()
+            contrast = self.contrast_var.get()
+            saturation = self.color_var.get()
+            threshold = self.threshold_var.get()
+            
+            # 显示当前调节值
+            print(f"当前参数设置 - 亮度: {brightness:.2f}, 对比度: {contrast:.2f}, "
+                  f"饱和度: {saturation:.2f}, 背景阈值: {threshold}")
+            self.status_var.set(f"当前参数设置 - 亮度: {brightness:.2f}, 对比度: {contrast:.2f}, "
+                               f"饱和度: {saturation:.2f}, 背景阈值: {threshold}")
+            
             # 更新红色通道预览
             if self.red_combobox.get():
                 red_path = os.path.join(self.folder_path.get(), "combined", self.red_combobox.get())
-                # 生成并显示红色伪彩色图片
                 red_pseudo = convert_to_pseudo_color(red_path, 'red')
                 self.show_preview(red_pseudo, self.red_preview, (300, 300))
             
             # 更新绿色通道预览
             if self.green_combobox.get():
                 green_path = os.path.join(self.folder_path.get(), "combined", self.green_combobox.get())
-                # 生成并显示绿色伪彩色图片
                 green_pseudo = convert_to_pseudo_color(green_path, 'green')
                 self.show_preview(green_pseudo, self.green_preview, (300, 300))
             
             # 如果两个通道都选择了，更新合并预览
             if red_pseudo and green_pseudo:
-                # 叠加两个伪彩色图片
-                merged = overlay_images(red_pseudo, green_pseudo)
+                merged = overlay_images(red_pseudo, green_pseudo, 
+                                     brightness=brightness,
+                                     contrast=contrast,
+                                     saturation=saturation,
+                                     threshold=threshold)
                 self.show_preview(merged, self.merge_preview, (300, 300))
                 
         except Exception as e:
