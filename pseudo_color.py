@@ -75,8 +75,13 @@ def batch_process(input_folder, color_mode='red', output_folder=None):
     print(f"批量处理完成，共处理 {processed_count} 张图片")
 
 if __name__ == "__main__":
-    # 示例用法
-    folder_path = r"E:\北京简辑\experimental\20250122四角\combined"  # 使用合并后的图片文件夹
+    import sys
+    if len(sys.argv) < 2:
+        print("用法: python pseudo_color.py <文件夹路径>")
+        sys.exit(1)
+        
+    folder_path = sys.argv[1]
+    print(f"处理文件夹: {folder_path}")
     
     # 批量生成红色伪彩图
     batch_process(folder_path, 'red')

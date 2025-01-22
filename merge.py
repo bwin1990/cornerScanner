@@ -2,25 +2,10 @@ import os
 import re
 from PIL import Image
 
-# 设置文件夹路径
-folder_path = r"E:\北京简辑\experimental\20250122四角"
-
-# 创建输出子文件夹
-output_folder = os.path.join(folder_path, "combined")
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
-
-# 获取目录中所有的 .bmp 文件
-all_files = [f for f in os.listdir(folder_path) if f.endswith('.bmp')]
-
-# 提取唯一前缀的函数
 def get_prefix(filename):
+    """提取唯一前缀的函数"""
     return re.sub(r"_(LD|LU|RD|RU)\.bmp$", "", filename)
 
-# 获取所有唯一的前缀
-prefixes = list(set(get_prefix(f) for f in all_files))
-
-# 处理每组图片的函数
 def process_image_set(prefix, folder_path):
     """
     处理一组图片
@@ -61,7 +46,3 @@ def process_image_set(prefix, folder_path):
     except Exception as e:
         print(f"Error processing prefix {prefix}: {e}")
         return False  # 明确返回失败
-
-# 处理所有组的图片
-for prefix in prefixes:
-    process_image_set(prefix, folder_path)
