@@ -152,7 +152,12 @@ class ImageProcessorGUI:
         """更新下拉框中的图片列表"""
         combined_folder = os.path.join(self.folder_path.get(), "combined")
         if os.path.exists(combined_folder):
-            files = [f for f in os.listdir(combined_folder) if f.endswith('.bmp')]
+            # 只选择.bmp文件，并过滤掉包含'overlay'、'_green'和'_red'的文件
+            files = [f for f in os.listdir(combined_folder) 
+                    if f.endswith('.bmp') 
+                    and 'overlay' not in f 
+                    and '_green' not in f 
+                    and '_red' not in f]
             self.red_combobox['values'] = files
             self.green_combobox['values'] = files
     
