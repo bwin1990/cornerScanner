@@ -57,8 +57,13 @@ class ImageProcessorGUI:
         self.merge_frame = ttk.LabelFrame(self.main_frame, text="叠加结果", padding="5")
         self.merge_frame.grid(row=1, column=2, sticky=(tk.W, tk.E, tk.N, tk.S), padx=5, pady=5)
         
+        # 添加通道信息标签
+        self.channel_info = ttk.Label(self.merge_frame, text="")
+        self.channel_info.grid(row=0, column=0, pady=5)
+        
+        # 增大预览尺寸
         self.merge_preview = ttk.Label(self.merge_frame)
-        self.merge_preview.grid(row=0, column=0, pady=5)
+        self.merge_preview.grid(row=1, column=0, pady=5)
         
         # 在合并结果预览框下方添加调节控件
         self.adjust_frame = ttk.LabelFrame(self.main_frame, text="图像调节", padding="5")
@@ -167,6 +172,18 @@ class ImageProcessorGUI:
             red_pseudo = None
             green_pseudo = None
             
+            # 获取当前选择的文件名
+            red_file = self.red_combobox.get()
+            green_file = self.green_combobox.get()
+            
+            # 更新通道信息
+            channel_info = ""
+            if red_file and green_file:
+                red_type = red_file.split('_')[0]    # 获取文件名前缀（A/ACT/T/C/G）
+                green_type = green_file.split('_')[0]
+                channel_info = f"红色通道: {red_type}\n绿色通道: {green_type}"
+            self.channel_info.config(text=channel_info)
+            
             # 获取当前的调节值
             brightness = self.brightness_var.get()
             contrast = self.contrast_var.get()
@@ -180,14 +197,14 @@ class ImageProcessorGUI:
                                f"饱和度: {saturation:.2f}, 背景阈值: {threshold}")
             
             # 更新红色通道预览
-            if self.red_combobox.get():
-                red_path = os.path.join(self.folder_path.get(), "combined", self.red_combobox.get())
+            if red_file:
+                red_path = os.path.join(self.folder_path.get(), "combined", red_file)
                 red_pseudo = convert_to_pseudo_color(red_path, 'red')
                 self.show_preview(red_pseudo, self.red_preview, (300, 300))
             
             # 更新绿色通道预览
-            if self.green_combobox.get():
-                green_path = os.path.join(self.folder_path.get(), "combined", self.green_combobox.get())
+            if green_file:
+                green_path = os.path.join(self.folder_path.get(), "combined", green_file)
                 green_pseudo = convert_to_pseudo_color(green_path, 'green')
                 self.show_preview(green_pseudo, self.green_preview, (300, 300))
             
@@ -198,7 +215,8 @@ class ImageProcessorGUI:
                                      contrast=contrast,
                                      saturation=saturation,
                                      threshold=threshold)
-                self.show_preview(merged, self.merge_preview, (300, 300))
+                # 增大叠加结果的预览尺寸
+                self.show_preview(merged, self.merge_preview, (600, 600))  # 增大到600x600
                 
         except Exception as e:
             messagebox.showerror("错误", f"更新预览时出错: {str(e)}")
