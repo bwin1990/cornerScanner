@@ -1,4 +1,14 @@
+import sys
 import os
+# 确保能找到其他模块
+if getattr(sys, 'frozen', False):
+    # 如果是打包后的exe运行
+    application_path = os.path.dirname(sys.executable)
+else:
+    # 如果是直接运行python脚本
+    application_path = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(application_path)
+
 import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter.filedialog import askdirectory
